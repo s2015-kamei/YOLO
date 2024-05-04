@@ -1,0 +1,9 @@
+# created by virtualenv automatically
+/datasets
+/runs
+/*.pt
+/bin
+/lib
+/lib64
+/include
+/share
