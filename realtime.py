@@ -37,42 +37,46 @@ try:
 
         results = model.predict(RGB_image, show=False, verbose=False) 
 
-
+        results_number = len(results)
+        results_images = []
         for result in results:
             #print(result.boxes.xyxy.size())
             if(result.boxes.xyxy.shape[0] == 0):
                 continue
+            for i in range(result.boxes.xyxy.shape[0]):
 
-            image = Image.fromarray(depth_colormap)
-            image = image.crop((result.boxes.xyxy[0][0].item(), result.boxes.xyxy[0][1].item(), result.boxes.xyxy[0][2].item(), result.boxes.xyxy[0][3].item()))
-            image = np.array(image, dtype=np.uint8)
+                image = Image.fromarray(RGB_image)
+                image = image.crop((result.boxes.xyxy[i][0].item(), result.boxes.xyxy[i][1].item(), result.boxes.xyxy[i][2].item(), result.boxes.xyxy[i][3].item()))
+                image = np.array(image, dtype=np.uint8)
 
-            x_size = image.shape[1]
-            y_size = image.shape[0]
+                x_size = image.shape[1]
+                y_size = image.shape[0]
 
-            
-            #　画像を中心を維持したまま正方形にする
-            if x_size > y_size:
-                image = image[:, int((x_size - y_size) / 2):int((x_size + y_size) / 2)]
-            else:
-                image = image[int((y_size - x_size) / 2):int((y_size + x_size) / 2), :]
+                
+                #　画像を中心を維持したまま正方形にする
+                if x_size > y_size:
+                    image = image[:, int((x_size - y_size) / 2):int((x_size + y_size) / 2)]
+                else:
+                    image = image[int((y_size - x_size) / 2):int((y_size + x_size) / 2), :]
 
 
-            # 画像の中央50% * 50%の範囲の深度を取得
-            x1 = int(result.boxes.xyxy[0][0].item()) + int(image.shape[0] / 4)
-            x2 = int(result.boxes.xyxy[0][2].item()) - int(image.shape[0] / 4)
-            y1 = int(result.boxes.xyxy[0][1].item()) + int(image.shape[1] / 4)
-            y2 = int(result.boxes.xyxy[0][3].item()) - int(image.shape[1] / 4)
+                # 画像の中央50% * 50%の範囲の深度を取得
+                x1 = int(result.boxes.xyxy[i][0].item()) + int(image.shape[0] / 4)
+                x2 = int(result.boxes.xyxy[i][2].item()) - int(image.shape[0] / 4)
+                y1 = int(result.boxes.xyxy[i][1].item()) + int(image.shape[1] / 4)
+                y2 = int(result.boxes.xyxy[i][3].item()) - int(image.shape[1] / 4)
 
-            depth_list = [depth_frame.get_distance(x, y) for x in range(x1, x2 + 1) for y in range(y1, y2 + 1)]
-            depth_average = sum(depth_list) / len(depth_list)
-            
-            print(depth_frame.get_distance(int(result.boxes.xyxy[0][0].item()) + int(image.shape[0] / 2), int(result.boxes.xyxy[0][1].item()) + int(image.shape[1] / 2)))
+                depth_list = [depth_frame.get_distance(x, y) for x in range(x1, x2 + 1) for y in range(y1, y2 + 1)]
+                depth_average = sum(depth_list) / len(depth_list)
+                
+                print(depth_average)
 
-            # 表示
-            cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-            cv2.imshow('RealSense', image)
-            cv2.waitKey(1)
+                # 表示
+                results_images.append(image)
+
+        for i, result_image in enumerate(results_images):
+            cv2.imshow(f"result{i}", result_image)
+        cv2.waitKey(1)
 
 finally:
     pipe.stop()
